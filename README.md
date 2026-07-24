@@ -21,7 +21,7 @@ Master repo for building the entire suite of PlayStation 3 development tools and
 
 ## What is PS3DEV?
 
-`ps3dev` is designed to offer a smooth entry point into developing for the PlayStation 3. It orchestrates the installation of the complete PS3 development environment for all supported platforms.
+PS3DEV is designed to offer a smooth entry point into developing for the PlayStation 3. It orchestrates the installation of the complete PS3 development environment for all supported platforms.
 
 Start here if you're looking to build code for the PS3.
 
@@ -74,9 +74,13 @@ Ensure [Homebrew](https://brew.sh/) is installed and run:
 
 Alternatively, there is a script for Linux and macOS that does this for you. Run `sudo ./prepare.sh`.
 
+### Windows
+
+To use the PS3DEV environment on Windows, use Ubuntu WSL and follow the Linux procedure as normal.
+
 ## Building
 
-You can build the `ps3dev` environment from source.
+You can build the PS3DEV environment from source.
 
 1. Download the latest release.
 2. Add the [bash variables](#bash-variables) to your login script and install [dependencies](#dependencies).
