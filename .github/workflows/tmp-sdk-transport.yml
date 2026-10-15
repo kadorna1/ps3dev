@@ -1,0 +1,63 @@
+name: Temporary PS3DEV SDK transport
+on:
+  push:
+    paths:
+      - ".github/workflows/tmp-sdk-transport.yml"
+permissions:
+  contents: read
+jobs:
+  split-sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Download and verify official PS3DEV Linux SDK
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          url="https://github.com/ps3dev/ps3dev/releases/download/nightly-2026-10-12/ps3dev-linux-X64.tar.gz"
+          file="ps3dev-linux-X64.tar.gz"
+          curl --fail --location --retry 3 --retry-delay 2 --output "$file" "$url"
+          expected_size=298298575
+          expected_sha=76b1b3bc9ac260a4ece86da520225da7f2f4e334174e37b850093ff925eeb900
+          actual_size="$(stat -c '%s' "$file")"
+          actual_sha="$(sha256sum "$file" | awk '{print $1}')"
+          printf 'size=%s\nsha256=%s\n' "$actual_size" "$actual_sha"
+          test "$actual_size" = "$expected_size"
+          test "$actual_sha" = "$expected_sha"
+          split -b 70m -d -a 2 "$file" sdk-part-
+          ls -lh sdk-part-*
+      - name: Upload part 00
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps3dev-sdk-part-00
+          path: sdk-part-00
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps3dev-sdk-part-01
+          path: sdk-part-01
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps3dev-sdk-part-02
+          path: sdk-part-02
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps3dev-sdk-part-03
+          path: sdk-part-03
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps3dev-sdk-part-04
+          path: sdk-part-04
+          if-no-files-found: error
+          retention-days: 1
