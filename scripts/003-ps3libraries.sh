@@ -16,30 +16,31 @@ checkout_repository \
     "$PS3LIBRARIES_REF" \
     "$PS3LIBRARIES_SOURCE_DIR"
 
-# cairographics.org may return 404 in CI even though the release archive is
-# available from the FreeDesktop mirror. Keep the pinned Cairo version and the
-# existing SHA-256/size checks; only change the source URL in the downloaded
-# ps3libraries checkout. Override the mirror with PS3LIBRARIES_CAIRO_URL.
-CAIRO_ARCHIVE_LIST="$PS3LIBRARIES_SOURCE_DIR/archives/archives.txt"
-CAIRO_PRIMARY_URL="https://cairographics.org/releases/cairo-1.10.0.tar.gz"
-CAIRO_MIRROR_URL="${PS3LIBRARIES_CAIRO_URL:-https://cairo.freedesktop.org/releases/cairo-1.10.0.tar.gz}"
+# cairographics.org is intermittently unavailable to CI for the legacy Pixman
+# and Cairo tarballs. Both exact archives are mirrored by FreeDesktop. Keep
+# pinned versions, sizes, SHA-256 hashes, and build scripts unchanged; only
+# rewrite the release host in the downloaded ps3libraries archive index.
+# Set PS3LIBRARIES_RELEASE_MIRROR to use a different compatible mirror.
+CAIRO_RELEASE_HOST="https://cairographics.org/releases/"
+CAIRO_RELEASE_MIRROR="${PS3LIBRARIES_RELEASE_MIRROR:-https://cairo.freedesktop.org/releases/}"
+PS3LIBRARIES_ARCHIVE_LIST="$PS3LIBRARIES_SOURCE_DIR/archives/archives.txt"
 
-if [[ -f "$CAIRO_ARCHIVE_LIST" ]] && grep -Fq -- "$CAIRO_PRIMARY_URL" "$CAIRO_ARCHIVE_LIST"; then
-    CAIRO_ARCHIVE_LIST_TMP="${CAIRO_ARCHIVE_LIST}.tmp.$$"
+if [[ -f "$PS3LIBRARIES_ARCHIVE_LIST" ]] && grep -Fq -- "$CAIRO_RELEASE_HOST" "$PS3LIBRARIES_ARCHIVE_LIST"; then
+    ARCHIVE_LIST_TMP="${PS3LIBRARIES_ARCHIVE_LIST}.tmp.$$"
 
-    awk -v old="$CAIRO_PRIMARY_URL" -v new="$CAIRO_MIRROR_URL" '
+    awk -v old="$CAIRO_RELEASE_HOST" -v new="$CAIRO_RELEASE_MIRROR" '
         {
             for (i = 1; i <= NF; i++) {
-                if ($i == old) {
-                    $i = new
+                if (index($i, old) == 1) {
+                    $i = new substr($i, length(old) + 1)
                 }
             }
             print
         }
-    ' "$CAIRO_ARCHIVE_LIST" > "$CAIRO_ARCHIVE_LIST_TMP"
+    ' "$PS3LIBRARIES_ARCHIVE_LIST" > "$ARCHIVE_LIST_TMP"
 
-    mv "$CAIRO_ARCHIVE_LIST_TMP" "$CAIRO_ARCHIVE_LIST"
-    heading "Using FreeDesktop mirror for Cairo 1.10.0"
+    mv "$ARCHIVE_LIST_TMP" "$PS3LIBRARIES_ARCHIVE_LIST"
+    heading "Using FreeDesktop mirror for legacy Pixman/Cairo releases"
 fi
 
 heading "Building ps3libraries"
