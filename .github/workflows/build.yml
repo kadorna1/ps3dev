@@ -55,7 +55,7 @@ jobs:
 
       - name: Build Package
         run: |
-           tar -zcvf ps3dev-${{ matrix.os }}-${{ runner.arch }}.tar.gz ps3dev/
+           tar -zcvf ps3dev-linux-${{ runner.arch }}.tar.gz ps3dev/
 
       - name: Push package artifact
         uses: actions/upload-artifact@v7
