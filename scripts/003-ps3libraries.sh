@@ -20,9 +20,9 @@ checkout_repository \
 # tarballs. Use the X.Org archive for Pixman and the FreeDesktop mirror for
 # Cairo. Keep upstream versions, sizes, SHA-256 hashes, and build scripts
 # unchanged; only rewrite source URLs in the downloaded archive index.
-# Override the Cairo mirror with PS3LIBRARIES_CAIRO_RELEASE_MIRROR.
+# Override the Pixman mirror with PS3LIBRARIES_PIXMAN_URL or the Cairo mirror with PS3LIBRARIES_CAIRO_RELEASE_MIRROR.
 PIXMAN_PRIMARY_URL="https://cairographics.org/releases/pixman-0.20.0.tar.gz"
-PIXMAN_MIRROR_URL="${PS3LIBRARIES_PIXMAN_URL:-https://xorg.freedesktop.org/archive/individual/lib/pixman-0.20.0.tar.gz}"
+PIXMAN_MIRROR_URL="${PS3LIBRARIES_PIXMAN_URL:-https://artfiles.org/x.org/pub/individual/lib/pixman-0.20.0.tar.gz}"
 CAIRO_RELEASE_HOST="https://cairographics.org/releases/"
 CAIRO_RELEASE_MIRROR="${PS3LIBRARIES_CAIRO_RELEASE_MIRROR:-https://cairo.freedesktop.org/releases/}"
 PS3LIBRARIES_ARCHIVE_LIST="$PS3LIBRARIES_SOURCE_DIR/archives/archives.txt"
