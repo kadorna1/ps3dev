@@ -4,19 +4,7 @@ on: [ push, pull_request, workflow_dispatch ]
 
 jobs:
   build:
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            os: linux
-
-          - runner: macos-15-intel
-            os: macos
-
-          - runner: macos-26
-            os: macos
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -35,20 +23,8 @@ jobs:
           echo "NO_SAVANNAH=1" >> $GITHUB_ENV
 
       - name: Install Linux requirements
-        if: matrix.os == 'linux'
         run: |
           sudo apt-get -y install gcc libelf-dev autoconf automake bison flex make texinfo patch wget zlib1g-dev libtool-bin bzip2 pkg-config libssl-dev
-
-      - name: Install MacOS requirements
-        if: matrix.os == 'macos'
-        shell: bash
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-          HOMEBREW_NO_INSTALL_CLEANUP: 1
-          HOMEBREW_NO_ENV_HINTS: 1
-        run: |
-          eval "$(brew shellenv)"
-          brew install autoconf automake openssl libelf ncurses zlib gmp wget pkg-config texinfo
 
       - name: Download PS3DEV Toolchain
         env:
@@ -60,7 +36,7 @@ jobs:
               | sort_by(.published_at)
               | reverse
               | .[0].assets[]
-              | select(.name == "ps3dev-${{ matrix.os }}-${{ runner.arch }}.tar.gz")
+              | select(.name == "ps3dev-linux-${{ runner.arch }}.tar.gz")
               | .browser_download_url
             ')
 
@@ -84,8 +60,8 @@ jobs:
       - name: Push package artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ps3dev-${{ env.sha_name }}-${{ matrix.os }}-${{ runner.arch }}
-          path: ps3dev-${{ matrix.os }}-${{ runner.arch }}.tar.gz
+          name: ps3dev-${{ env.sha_name }}-linux-${{ runner.arch }}
+          path: ps3dev-linux-${{ runner.arch }}.tar.gz
           if-no-files-found: error
 
   push_release:
