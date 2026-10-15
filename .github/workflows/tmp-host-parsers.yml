@@ -29,7 +29,9 @@ jobs:
               [ -n "$soname" ] && [ -f "$libpath" ] || continue
               real="$(basename "$libpath")"
               cp -L "$libpath" "bundle/lib/$real"
-              ln -sfn "$real" "bundle/lib/$soname"
+              if [ "$soname" != "$real" ]; then
+                ln -sfn "$real" "bundle/lib/$soname"
+              fi
             done < <(ldd "$exe" | awk '/=> \/[^ ]+/ {print $1, $3} /^\// {n=$1; sub(/^.*\//,"",n); print n, $1}')
           done
           tar -czf host-parser-tools.tar.gz -C bundle .
