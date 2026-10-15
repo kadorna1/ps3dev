@@ -1,0 +1,44 @@
+name: Temporary host Bison and Flex transport
+on:
+  push:
+    paths:
+      - ".github/workflows/tmp-host-parsers.yml"
+permissions:
+  contents: read
+jobs:
+  package-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install host parser tools
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends bison flex m4
+          bison --version | head -n 1
+          flex --version
+          mkdir -p bundle/bin bundle/share/bison bundle/share/flex bundle/lib
+          cp -L /usr/bin/bison bundle/bin/bison
+          cp -L /usr/bin/flex bundle/bin/flex
+          cp -L "$(command -v m4)" bundle/bin/m4
+          cp -a /usr/share/bison/. bundle/share/bison/
+          if [ -d /usr/share/flex ]; then cp -a /usr/share/flex/. bundle/share/flex/; fi
+          for exe in /usr/bin/bison /usr/bin/flex "$(command -v m4)"; do
+            while read -r soname libpath; do
+              [ -n "$soname" ] && [ -f "$libpath" ] || continue
+              real="$(basename "$libpath")"
+              cp -L "$libpath" "bundle/lib/$real"
+              ln -sfn "$real" "bundle/lib/$soname"
+            done < <(ldd "$exe" | awk '/=> \/[^ ]+/ {print $1, $3} /^\// {n=$1; sub(/^.*\//,"",n); print n, $1}')
+          done
+          tar -czf host-parser-tools.tar.gz -C bundle .
+          ls -lh host-parser-tools.tar.gz
+          tar -tzf host-parser-tools.tar.gz | sed -n '1,25p'
+      - name: Upload host parser tools
+        uses: actions/upload-artifact@v4
+        with:
+          name: host-parser-tools-debian-ubuntu
+          path: host-parser-tools.tar.gz
+          if-no-files-found: error
+          retention-days: 1
