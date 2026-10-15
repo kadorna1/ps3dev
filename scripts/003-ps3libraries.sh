@@ -24,7 +24,7 @@ checkout_repository \
 PIXMAN_PRIMARY_URL="https://cairographics.org/releases/pixman-0.20.0.tar.gz"
 PIXMAN_MIRROR_URL="${PS3LIBRARIES_PIXMAN_URL:-https://artfiles.org/x.org/pub/individual/lib/pixman-0.20.0.tar.gz}"
 CAIRO_RELEASE_HOST="https://cairographics.org/releases/"
-CAIRO_RELEASE_MIRROR="${PS3LIBRARIES_CAIRO_RELEASE_MIRROR:-https://cairo.freedesktop.org/releases/}"
+CAIRO_RELEASE_MIRROR="${PS3LIBRARIES_CAIRO_RELEASE_MIRROR:-https://support.garz-fricke.com/mirror/}"
 PS3LIBRARIES_ARCHIVE_LIST="$PS3LIBRARIES_SOURCE_DIR/archives/archives.txt"
 
 if [[ -f "$PS3LIBRARIES_ARCHIVE_LIST" ]] && grep -Fq -- "$CAIRO_RELEASE_HOST" "$PS3LIBRARIES_ARCHIVE_LIST"; then
