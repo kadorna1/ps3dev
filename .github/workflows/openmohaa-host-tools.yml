@@ -1,0 +1,60 @@
+name: Temporary OpenMoHAA host parser tools
+
+on:
+  push:
+    branches:
+      - chatgpt/openmohaa-host-tools-20261015
+    paths:
+      - .github/workflows/openmohaa-host-tools.yml
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+    steps:
+      - name: Install host generators and bundle their non-core runtime libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends bison flex m4 python3
+          mkdir -p /tmp/host-tools/bin /tmp/host-tools/lib
+          cp /usr/bin/bison /usr/bin/flex /usr/bin/m4 /tmp/host-tools/bin/
+          python3 - <<'PY'
+          import re, shutil, subprocess
+          from pathlib import Path
+
+          root = Path("/tmp/host-tools")
+          core = re.compile(r"^(libc\\.so|libm\\.so|libpthread\\.so|libdl\\.so|librt\\.so|libresolv\\.so|libgcc_s\\.so|libstdc\\+\\+\\.so|libatomic\\.so|ld-linux)")
+          todo = [Path("/usr/bin/bison"), Path("/usr/bin/flex"), Path("/usr/bin/m4")]
+          seen = set()
+          while todo:
+              binary = todo.pop().resolve()
+              if binary in seen:
+                  continue
+              seen.add(binary)
+              proc = subprocess.run(["ldd", str(binary)], text=True, capture_output=True, check=False)
+              for line in proc.stdout.splitlines():
+                  match = re.search(r"=>\\s+(/[^ ]+)|^\\s*(/[^ ]+)\\s+\\(", line)
+                  if not match:
+                      continue
+                  dep = Path(match.group(1) or match.group(2)).resolve()
+                  if core.match(dep.name):
+                      continue
+                  dest = root / "lib" / dep.name
+                  if not dest.exists():
+                      shutil.copy2(dep, dest)
+                  todo.append(dep)
+          PY
+          printf 'bison: '; /usr/bin/bison --version | head -1
+          printf 'flex: '; /usr/bin/flex --version
+          printf 'm4: '; /usr/bin/m4 --version | head -1
+          tar -czf /tmp/openmohaa-host-tools.tar.gz -C /tmp host-tools
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: openmohaa-host-parser-tools-20261015
+          path: /tmp/openmohaa-host-tools.tar.gz
+          if-no-files-found: error
+          retention-days: 3
