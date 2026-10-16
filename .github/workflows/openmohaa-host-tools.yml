@@ -19,8 +19,10 @@ jobs:
           set -euo pipefail
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends bison flex m4 python3
-          mkdir -p /tmp/host-tools/bin /tmp/host-tools/lib
+          mkdir -p /tmp/host-tools/bin /tmp/host-tools/lib /tmp/host-tools/share
           cp /usr/bin/bison /usr/bin/flex /usr/bin/m4 /tmp/host-tools/bin/
+          cp -a /usr/share/bison /tmp/host-tools/share/
+          if [ -d /usr/share/flex ]; then cp -a /usr/share/flex /tmp/host-tools/share/; fi
           python3 - <<'PY'
           import shutil, subprocess
           from pathlib import Path
@@ -66,7 +68,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: openmohaa-host-parser-tools-20261015
+          name: openmohaa-host-parser-tools-20261015b
           path: /tmp/openmohaa-host-tools.tar.gz
           if-no-files-found: error
           retention-days: 3
