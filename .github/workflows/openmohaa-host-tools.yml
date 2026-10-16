@@ -22,30 +22,42 @@ jobs:
           mkdir -p /tmp/host-tools/bin /tmp/host-tools/lib
           cp /usr/bin/bison /usr/bin/flex /usr/bin/m4 /tmp/host-tools/bin/
           python3 - <<'PY'
-          import re, shutil, subprocess
+          import shutil, subprocess
           from pathlib import Path
 
           root = Path("/tmp/host-tools")
-          core = re.compile(r"^(libc\\.so|libm\\.so|libpthread\\.so|libdl\\.so|librt\\.so|libresolv\\.so|libgcc_s\\.so|libstdc\\+\\+\\.so|libatomic\\.so|ld-linux)")
-          todo = [Path("/usr/bin/bison"), Path("/usr/bin/flex"), Path("/usr/bin/m4")]
+          core_prefixes = (
+              "libc.so", "libm.so", "libpthread.so", "libdl.so", "librt.so",
+              "libresolv.so", "libgcc_s.so", "libstdc++.so", "libatomic.so",
+              "ld-linux",
+          )
+          pending = [Path("/usr/bin/bison"), Path("/usr/bin/flex"), Path("/usr/bin/m4")]
           seen = set()
-          while todo:
-              binary = todo.pop().resolve()
+          while pending:
+              binary = pending.pop().resolve()
               if binary in seen:
                   continue
               seen.add(binary)
               proc = subprocess.run(["ldd", str(binary)], text=True, capture_output=True, check=False)
               for line in proc.stdout.splitlines():
-                  match = re.search(r"=>\\s+(/[^ ]+)|^\\s*(/[^ ]+)\\s+\\(", line)
-                  if not match:
+                  dep_text = None
+                  if "=>" in line:
+                      right = line.split("=>", 1)[1].strip().split()
+                      if right and right[0].startswith("/"):
+                          dep_text = right[0]
+                  else:
+                      fields = line.strip().split()
+                      if fields and fields[0].startswith("/"):
+                          dep_text = fields[0]
+                  if not dep_text:
                       continue
-                  dep = Path(match.group(1) or match.group(2)).resolve()
-                  if core.match(dep.name):
+                  dep = Path(dep_text).resolve()
+                  if not dep.is_file() or dep.name.startswith(core_prefixes):
                       continue
                   dest = root / "lib" / dep.name
                   if not dest.exists():
                       shutil.copy2(dep, dest)
-                  todo.append(dep)
+                  pending.append(dep)
           PY
           printf 'bison: '; /usr/bin/bison --version | head -1
           printf 'flex: '; /usr/bin/flex --version
